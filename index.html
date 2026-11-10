@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Arcade Passport | One keychain. Every arcade. Every platform.</title>
+  <meta name="description" content="Arcade Passport is an NFC keychain in development for arcade play history, profiles, and venue discovery.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Arcade Passport">
+  <meta property="og:description" content="One keychain. Every arcade. Every platform. In development.">
+  <meta name="theme-color" content="#090b18">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090b18;
+      --panel: #12172b;
+      --panel-2: #1b2139;
+      --line: #414b68;
+      --text: #f7f8ff;
+      --muted: #c5cce0;
+      --cyan: #68f3ef;
+      --pink: #ff78d4;
+      --yellow: #ffe082;
+      --body: "DM Sans", system-ui, sans-serif;
+      --pixel: "Press Start 2P", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.65 var(--body);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      opacity: .35;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0 3px,
+        rgba(0, 0, 0, .09) 4px 5px
+      );
+    }
+    a { color: inherit; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a:focus-visible, button:focus-visible, input:focus-visible,
+    summary:focus-visible, [tabindex="0"]:focus-visible {
+      outline: 3px solid var(--yellow);
+      outline-offset: 4px;
+    }
+    ::selection { background: var(--pink); color: var(--bg); }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .skip {
+      position: absolute;
+      top: -5rem;
+      left: 1rem;
+      z-index: 100;
+      padding: .5rem 1rem;
+      background: var(--yellow);
+      color: var(--bg);
+    }
+    .skip:focus { top: 1rem; }
+    .wrap { width: min(1160px, calc(100% - 2.5rem)); margin-inline: auto; }
+    .pixel { font-family: var(--pixel); line-height: 1.65; letter-spacing: -.04em; }
+    .eyebrow {
+      color: var(--cyan);
+      font: 700 .72rem/1.5 var(--pixel);
+      text-transform: uppercase;
+    }
+    .tag {
+      display: inline-block;
+      padding: .28rem .7rem;
+      border: 1px solid var(--line);
+      border-radius: 100px;
+      color: var(--yellow);
+      font-size: .77rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .muted { color: var(--muted); }
+    .section { padding: 5.5rem 0; }
+    .section-head { max-width: 760px; margin-bottom: 2.3rem; }
+    .section h2 { margin: .55rem 0 1rem; font-size: clamp(1.25rem, 3vw, 2rem); }
+    .section-head p { margin: 0; color: var(--muted); font-size: 1.08rem; }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: 7px 7px 0 #050713;
+    }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      min-height: 3.2rem;
+      padding: .75rem 1.3rem;
+      border: 2px solid var(--cyan);
+      border-radius: 7px;
+      background: var(--cyan);
+      color: #06131d;
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 5px 5px 0 #1b7d91;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .button:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0 #1b7d91; }
+    .button.secondary {
+      border-color: var(--line);
+      background: transparent;
+      color: var(--text);
+      box-shadow: none;
+    }
+    .button.secondary:hover { border-color: var(--pink); }
+    .button:disabled { opacity: .65; cursor: wait; }
+
+    .site-header {
+      position: relative;
+      z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: #0c1020;
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      min-height: 76px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      font: clamp(.64rem, 1.2vw, .85rem)/1.5 var(--pixel);
+      text-decoration: none;
+    }
+    .logo-icon {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      background: var(--yellow);
+      color: var(--bg);
+      box-shadow: 4px 4px 0 var(--pink);
+      font: 1.3rem var(--body);
+    }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; font-size: .91rem; font-weight: 700; }
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--cyan); }
+    .nav-links .nav-cta {
+      padding: .5rem .75rem;
+      border: 1px solid var(--cyan);
+      border-radius: 5px;
+      color: var(--cyan);
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 5.5rem 0 5rem;
+      background:
+        radial-gradient(circle at 75% 45%, #33305b 0, transparent 43%),
+        linear-gradient(135deg, #11152a, #090b18 70%);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 30%;
+      background: linear-gradient(transparent, var(--bg));
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 2rem;
+    }
+    .hero h1 {
+      margin: 1.3rem 0 1rem;
+      font-size: clamp(1.65rem, 3.4vw, 3.2rem);
+      line-height: 1.45;
+      text-shadow: 3px 3px 0 #56356b;
+    }
+    .hero h1 span { color: var(--cyan); }
+    .hero p { max-width: 570px; color: var(--muted); font-size: 1.12rem; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 1rem; margin: 2rem 0 1.4rem; }
+    .status { display: flex; align-items: center; gap: .55rem; color: var(--yellow); font-size: .86rem; font-weight: 700; }
+    .status::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--yellow);
+      box-shadow: 0 0 12px var(--yellow);
+    }
+    .hero-art { position: relative; display: grid; place-items: center; min-height: 400px; }
+    .art-grid {
+      position: absolute;
+      inset: 5%;
+      transform: perspective(450px) rotateX(62deg);
+      background-image:
+        linear-gradient(#5b4d8366 1px, transparent 1px),
+        linear-gradient(90deg, #5b4d8366 1px, transparent 1px);
+      background-size: 30px 30px;
+      mask-image: linear-gradient(transparent, #000);
+    }
+    .reader {
+      position: absolute;
+      top: 26%;
+      right: 5%;
+      width: 46%;
+      height: 45%;
+      border: 3px solid #737b9e;
+      border-radius: 20px 20px 12px 12px;
+      background: linear-gradient(135deg, #303957, #151b2f);
+      box-shadow: 12px 15px 0 #060a15, 0 0 45px #64f3ef22;
+      transform: skewY(-6deg);
+    }
+    .reader::before {
+      content: "";
+      position: absolute;
+      inset: 12% 12% 27%;
+      border: 2px solid #4a5277;
+      border-radius: 8px;
+      background: radial-gradient(circle, #43d6d644, transparent 65%), #0b1226;
+    }
+    .reader::after {
+      content: "TAP HERE";
+      position: absolute;
+      bottom: 11%;
+      width: 100%;
+      color: var(--cyan);
+      font: clamp(.4rem, 1vw, .62rem) var(--pixel);
+      text-align: center;
+    }
+    .reader-wave {
+      position: absolute;
+      top: 32%;
+      right: 23%;
+      width: 70px;
+      height: 70px;
+      border: 3px solid var(--cyan);
+      border-radius: 50%;
+      box-shadow: 0 0 20px var(--cyan);
+      animation: pulse 2.6s infinite;
+    }
+    .keychain {
+      position: absolute;
+      top: 32%;
+      left: 13%;
+      width: 46%;
+      height: 34%;
+      transform: rotate(-14deg);
+      filter: drop-shadow(12px 18px 8px #0009);
+      animation: tap 3.8s ease-in-out infinite;
+    }
+    .keyring {
+      position: absolute;
+      top: 15%;
+      left: -20%;
+      width: 30%;
+      aspect-ratio: 1;
+      border: 8px solid #b1b8cd;
+      border-radius: 50%;
+    }
+    .keyring::after {
+      content: "";
+      position: absolute;
+      top: 45%;
+      right: -12px;
+      width: 16px;
+      height: 8px;
+      background: #b1b8cd;
+    }
+    .fob {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      border: 3px solid var(--pink);
+      border-radius: 24px;
+      background: linear-gradient(135deg, #40214d, #171b38);
+      box-shadow: inset 0 0 28px #ef65d344, 6px 7px 0 #9e397e;
+      font: clamp(.55rem, 1.25vw, .83rem)/1.7 var(--pixel);
+      text-align: center;
+    }
+    .fob b { color: var(--yellow); }
+    .spark { position: absolute; color: var(--yellow); font: 1.8rem var(--pixel); animation: blink 2s infinite; }
+    .spark.a { top: 20%; left: 14%; }
+    .spark.b { right: 8%; bottom: 9%; animation-delay: .8s; }
+    .tap-label { position: absolute; bottom: 6%; left: 8%; color: var(--muted); font: .65rem var(--pixel); }
+
+    .flow { display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; }
+    .tabs { display: grid; align-content: start; gap: .75rem; }
+    .tab {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--text);
+      font-weight: 800;
+      text-align: left;
+    }
+    .tab[aria-selected="true"] {
+      border-color: var(--cyan);
+      background: #103038;
+      box-shadow: inset 4px 0 var(--cyan);
+    }
+    .tab span { display: block; margin-bottom: .55rem; color: var(--yellow); font: .6rem var(--pixel); }
+    .flow-content {
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      align-items: center;
+      gap: 1rem;
+      min-height: 270px;
+      padding: 2rem;
+    }
+    .flow-content h3 { margin: .2rem 0; font-size: 1.5rem; }
+    .flow-content p { max-width: 520px; color: var(--muted); }
+    .flow-icon {
+      display: grid;
+      place-items: center;
+      width: 112px;
+      aspect-ratio: 1;
+      border: 3px solid var(--cyan);
+      border-radius: 20px;
+      background: #24344b;
+      color: var(--yellow);
+      box-shadow: 8px 8px 0 #6d3a76;
+      font-size: 3rem;
+    }
+    .micro { color: var(--muted); font-size: .85rem; }
+
+    .passport { background: #0d1123; }
+    .preview-label { margin: 0 0 1rem; }
+    .passport-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .profile, .map-panel { padding: 1.5rem; }
+    .profile-top { display: flex; align-items: center; gap: 1rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--line); }
+    .avatar {
+      display: grid;
+      place-items: center;
+      width: 72px;
+      aspect-ratio: 1;
+      border: 3px solid var(--yellow);
+      background: var(--pink);
+      color: #180c23;
+      box-shadow: 4px 4px 0 #823572;
+      font: 1.5rem var(--pixel);
+    }
+    .profile h3 { margin: 0; font-size: 1.3rem; }
+    .profile small { color: var(--muted); }
+    .stamps { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6rem; margin: 1.35rem 0; }
+    .stamp {
+      display: grid;
+      place-items: center;
+      min-height: 90px;
+      padding: .4rem;
+      border: 2px dashed #7180a1;
+      border-radius: 9px;
+      background: #19223b;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+    .stamp span { display: block; color: var(--muted); font-size: .68rem; line-height: 1.2; }
+    .timeline { margin: .4rem 0 0; padding: 0; border-left: 2px solid var(--pink); list-style: none; }
+    .timeline li { position: relative; padding: .15rem 0 1rem 1rem; }
+    .timeline li::before {
+      content: "";
+      position: absolute;
+      top: .6rem;
+      left: -6px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--pink);
+    }
+    .timeline li:last-child { padding-bottom: 0; }
+    .timeline strong { display: block; }
+    .map-panel { overflow: hidden; }
+    .map {
+      position: relative;
+      overflow: hidden;
+      height: 260px;
+      border: 1px solid #345672;
+      border-radius: 10px;
+      background: radial-gradient(circle at 65% 28%, #245279, #102c45 70%);
+    }
+    .map svg { display: block; width: 100%; height: 100%; fill: #4b8e87; stroke: #143c50; stroke-width: 2; }
+    .map-dot {
+      position: absolute;
+      width: 13px;
+      height: 13px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      background: var(--pink);
+      box-shadow: 0 0 15px var(--pink);
+    }
+    .map-dot.one { top: 38%; left: 23%; }
+    .map-dot.two { top: 51%; left: 31%; }
+    .map-dot.three { top: 36%; left: 57%; }
+    .map-caption { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1rem; color: var(--muted); font-size: .85rem; }
+    .platforms { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.2rem; }
+    .platforms span { padding: .25rem .55rem; border: 1px solid var(--line); border-radius: 4px; font-size: .75rem; }
+
+    .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .feature-card { padding: 2rem; }
+    .feature-card h3 { margin: .5rem 0 1rem; font-size: 1.2rem; }
+    .feature-card ul { padding-left: 1.2rem; color: var(--muted); }
+    .feature-card li { margin: .7rem 0; }
+    .feature-card.gamer { border-top: 4px solid var(--pink); }
+    .feature-card.venue { border-top: 4px solid var(--cyan); }
+
+    .pricing, .roadmap { background: #0d1123; }
+    .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+    .compare { width: 100%; min-width: 580px; border-collapse: collapse; background: var(--panel); }
+    .compare th, .compare td { padding: 1rem 1.15rem; border-bottom: 1px solid var(--line); text-align: left; }
+    .compare tr:last-child td { border-bottom: 0; }
+    .compare thead th { background: #202641; }
+    .compare th:not(:first-child), .compare td:not(:first-child) { width: 26%; text-align: center; }
+    .compare td:first-child { font-weight: 700; }
+    .yes { color: var(--cyan); font-weight: 800; }
+    .dash { color: var(--muted); }
+    .price-note { margin-top: 1rem; color: var(--muted); font-size: .9rem; }
+
+    .trust { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .trust article { padding: 1.5rem; }
+    .trust .number { color: var(--yellow); font: 1rem var(--pixel); }
+    .trust h3 { margin: .8rem 0 .4rem; }
+    .trust p { margin: 0; color: var(--muted); }
+
+    .road { display: grid; grid-template-columns: repeat(5, 1fr); gap: .75rem; }
+    .milestone { padding: 1.4rem; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); }
+    .milestone::before {
+      content: "";
+      display: block;
+      width: 13px;
+      height: 13px;
+      margin-bottom: 1rem;
+      border: 2px solid var(--pink);
+      border-radius: 50%;
+    }
+    .milestone.done::before { border-color: var(--cyan); background: var(--cyan); }
+    .milestone strong { display: block; font: .7rem/1.6 var(--pixel); }
+    .milestone small { color: var(--muted); }
+    .milestone.done small { color: var(--cyan); }
+
+    .faq-list { display: grid; gap: .7rem; }
+    .faq-list details { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+    .faq-list summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 1.4rem;
+      cursor: pointer;
+      font-weight: 800;
+      list-style: none;
+    }
+    .faq-list summary::-webkit-details-marker { display: none; }
+    .faq-list summary::after { content: "+"; color: var(--cyan); font-size: 1.4rem; line-height: 1; }
+    .faq-list details[open] summary::after { content: "-"; }
+    .faq-list details p { margin: 0; padding: 0 1.4rem 1.3rem; color: var(--muted); }
+
+    .waitlist {
+      background: radial-gradient(circle at 50% 0, #39305f, #101427 58%, #090b18);
+      text-align: center;
+    }
+    .waitlist .wrap { max-width: 750px; }
+    .waitlist h2 { font-size: clamp(1.4rem, 3vw, 2.15rem); }
+    .form-row { display: flex; gap: .7rem; max-width: 590px; margin: 1.8rem auto .6rem; }
+    .form-row input {
+      flex: 1;
+      min-width: 0;
+      min-height: 3.2rem;
+      padding: .8rem 1rem;
+      border: 2px solid #8793af;
+      border-radius: 6px;
+      background: #f8faff;
+      color: #101627;
+    }
+    .form-row input::placeholder { color: #4a5267; }
+    .form-note, .form-status { min-height: 1.5rem; color: var(--muted); font-size: .88rem; }
+    .form-status.error { color: #ffadb6; }
+    .form-status.success { color: var(--cyan); }
+
+    footer { padding: 2rem 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+    .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    footer a { color: var(--cyan); }
+
+    @keyframes tap {
+      0%, 18%, 100% { transform: translate(0, 0) rotate(-14deg); }
+      45%, 58% { transform: translate(33px, 0) rotate(-5deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: .35; transform: scale(.7); }
+      55% { opacity: 1; transform: scale(1.3); }
+    }
+    @keyframes blink { 50% { opacity: .25; } }
+
+    @media (max-width: 850px) {
+      .nav-links a:not(.nav-cta) { display: none; }
+      .hero-grid, .passport-grid, .duo { grid-template-columns: 1fr; }
+      .hero { padding: 4rem 0; }
+      .hero-art { width: 100%; max-width: 500px; min-height: 350px; margin: auto; }
+      .flow { grid-template-columns: 1fr; }
+      .tabs { grid-template-columns: repeat(3, 1fr); }
+      .road { grid-template-columns: repeat(2, 1fr); }
+      .road .milestone:last-child { grid-column: span 2; }
+      .trust { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .wrap { width: min(1160px, calc(100% - 2rem)); }
+      .section { padding: 4rem 0; }
+      .nav { min-height: 68px; }
+      .logo { font-size: .63rem; }
+      .nav-cta { font-size: .78rem; }
+      .hero h1 { font-size: 1.7rem; }
+      .hero-art { min-height: 290px; }
+      .tap-label { font-size: .5rem; }
+      .tabs { gap: .45rem; }
+      .tab { padding: .65rem; font-size: .74rem; }
+      .tab span { font-size: .48rem; }
+      .flow-content { grid-template-columns: 1fr; min-height: 0; padding: 1.3rem; }
+      .flow-icon { grid-row: 1; width: 75px; font-size: 2rem; }
+      .stamps { gap: .3rem; }
+      .stamp { min-height: 75px; font-size: 1.1rem; }
+      .form-row { flex-direction: column; }
+      .form-row .button { width: 100%; }
+      .road { grid-template-columns: 1fr; }
+      .road .milestone:last-child { grid-column: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav wrap" aria-label="Main navigation">
+      <a class="logo" href="#top" aria-label="Arcade Passport home">
+        <span class="logo-icon" aria-hidden="true">&#10022;</span>
+        <span>ARCADE<br>PASSPORT</span>
+      </a>
+      <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#passport">The Passport</a>
+        <a href="#venues">For venues</a>
+        <a href="#faq">FAQ</a>
+        <a class="nav-cta" href="#waitlist">Get updates</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="wrap hero-grid">
+        <div>
+          <span class="tag">In development</span>
+          <h1 class="pixel" id="hero-title">One keychain.<br><span>Every arcade.</span><br>Every platform.</h1>
+          <p>Take your arcade identity with you. Tap at a participating cabinet to log a play, revisit your history, and share your public profile with a phone tap.</p>
+          <div class="hero-actions">
+            <a class="button" href="#waitlist">Join the waitlist <span aria-hidden="true">&#8599;</span></a>
+            <a class="button secondary" href="#how">See how it works</a>
+          </div>
+          <div class="status">Building the next chapter of arcade nights</div>
+        </div>
+        <div class="hero-art" role="img" aria-label="Animated concept illustration of an Arcade Passport keychain approaching a cabinet reader">
+          <div class="art-grid"></div>
+          <div class="reader"></div>
+          <div class="reader-wave"></div>
+          <div class="keychain">
+            <div class="keyring"></div>
+            <div class="fob"><span>ARCADE<br><b>PASS<br>PORT</b></span></div>
+          </div>
+          <span class="spark a" aria-hidden="true">+</span>
+          <span class="spark b" aria-hidden="true">+</span>
+          <span class="tap-label">ONE TAP, EVERY PLATFORM</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="how" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">01 / How it works</span>
+          <h2 class="pixel" id="how-title">Your arcade story, one tap at a time.</h2>
+          <p>Three simple ways to use your Passport. Select a scenario to explore.</p>
+        </div>
+        <div class="flow">
+          <div class="tabs" role="tablist" aria-label="Tap scenarios">
+            <button class="tab" type="button" role="tab" id="tab-machine" aria-selected="true" aria-controls="scenario" data-scene="machine">
+              <span>01</span>At a machine
+            </button>
+            <button class="tab" type="button" role="tab" id="tab-phone" aria-selected="false" aria-controls="scenario" data-scene="phone" tabindex="-1">
+              <span>02</span>To a phone
+            </button>
+            <button class="tab" type="button" role="tab" id="tab-kiosk" aria-selected="false" aria-controls="scenario" data-scene="kiosk" tabindex="-1">
+              <span>03</span>At a kiosk
+            </button>
+          </div>
+          <div class="flow-content panel" id="scenario" role="tabpanel" aria-labelledby="tab-machine" tabindex="0">
+            <div>
+              <span class="tag" id="scene-tag">Machine tap</span>
+              <h3 id="scene-title">Play it. Remember it.</h3>
+              <p id="scene-copy">Tap your keychain on the reader at a participating cabinet. Each tap logs the game, venue, machine, and time to your history. Score tracking is planned only for machines that can support it.</p>
+              <p class="micro" id="scene-note">A tap logs a play; it does not measure play duration.</p>
+            </div>
+            <div class="flow-icon" id="scene-icon" aria-hidden="true">#</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section passport" id="passport" aria-labelledby="passport-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">02 / The Passport</span>
+          <h2 class="pixel" id="passport-title">Every stop leaves a mark.</h2>
+          <p>See your play history live in the companion app, explore venues visited, and revisit the month in your recap.</p>
+        </div>
+        <p class="tag preview-label">Concept preview - illustrative data</p>
+        <div class="passport-grid">
+          <article class="profile panel" aria-label="Concept preview player profile">
+            <div class="profile-top">
+              <div class="avatar" aria-hidden="true">AP</div>
+              <div><h3>Player One</h3><small>Public profile preview</small></div>
+            </div>
+            <h3>Cabinet stamps</h3>
+            <div class="stamps" aria-label="Example games">
+              <div class="stamp">&#10022;<span>Space<br>Shooter</span></div>
+              <div class="stamp">&#9670;<span>Street<br>Racer</span></div>
+              <div class="stamp">&#9679;<span>Pinball</span></div>
+              <div class="stamp">&#10005;<span>Fighter</span></div>
+            </div>
+            <h3>Venue timeline</h3>
+            <ol class="timeline">
+              <li><strong>Neon Arcade</strong><small>Space Shooter / example visit</small></li>
+              <li><strong>Pixel Lounge</strong><small>Pinball / example visit</small></li>
+            </ol>
+          </article>
+
+          <article class="map-panel panel" aria-label="Concept preview map and gamer tags">
+            <h3>Where you've played</h3>
+            <div class="map" role="img" aria-label="Stylized concept world map with three example venue markers">
+              <svg viewBox="0 0 600 280" aria-hidden="true" focusable="false">
+                <path d="M25 57l65-25 49 13 24 35-23 19-39-5-10 32-37 13-19-35-28-12zM111 141l48-9 32 35-16 39-19 14-10 43-27-12-12-38-18-27zM241 52l48-23 43 11 25 30 53-8 44 23 28-7 42 24-17 27-53 6-22 35-39-5-18-33-31 18-26-15-20-32-47 13-18-21zM299 151l48-7 40 25 3 43-28 38-33-12-21-43zM464 190l49-15 53 20 16 39-41 18-60-11z"/>
+              </svg>
+              <span class="map-dot one"></span>
+              <span class="map-dot two"></span>
+              <span class="map-dot three"></span>
+            </div>
+            <div class="map-caption"><span>Illustrative venue pins</span><span>Passport Pro concept</span></div>
+            <h3>Find me on</h3>
+            <p class="micro">Players choose which gamer tags appear on their public profile.</p>
+            <div class="platforms" aria-label="Example gaming platforms">
+              <span>Steam</span><span>PlayStation</span><span>Xbox</span><span>Battle.net</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="venues" aria-labelledby="audience-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">03 / Built for both sides</span>
+          <h2 class="pixel" id="audience-title">Good for the game. Good for the room.</h2>
+        </div>
+        <div class="duo">
+          <article class="feature-card gamer panel">
+            <span class="tag">For gamers</span>
+            <h3>Keep the nights that count.</h3>
+            <ul>
+              <li>A play history across participating arcade bars.</li>
+              <li>Venue map, leaderboards, and monthly recap in the planned app.</li>
+              <li>Share your public profile by tapping your keychain to another person's phone.</li>
+              <li>Choose which Steam, PlayStation, Xbox, and Battle.net usernames are public.</li>
+            </ul>
+          </article>
+          <article class="feature-card venue panel">
+            <span class="tag">For venues</span>
+            <h3>Know your floor better.</h3>
+            <ul>
+              <li>A small reader designed to mount on each cabinet.</li>
+              <li>A tablet kiosk for players to set up profiles on-site.</li>
+              <li>A dashboard for plays per machine, peak hours, and top players.</li>
+              <li>Planned to be free for venues at launch; a venue subscription may follow later.</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section pricing" id="pricing" aria-labelledby="pricing-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">04 / Membership</span>
+          <h2 class="pixel" id="pricing-title">Start free. Go deeper if you want.</h2>
+          <p>Planned pricing, subject to change. The product and plans are in development.</p>
+        </div>
+        <div class="table-scroll">
+          <table class="compare">
+            <thead>
+              <tr>
+                <th scope="col">Feature</th>
+                <th scope="col">Free<br><small>$0 planned</small></th>
+                <th scope="col">Passport Pro<br><small>About $4.99-$7.99 / month planned</small></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Keychain and shareable profile</td><td class="yes">Included</td><td class="yes">Included</td></tr>
+              <tr><td>Recent play history</td><td class="yes">Included</td><td class="yes">Included</td></tr>
+              <tr><td>Full lifetime history</td><td class="dash">-</td><td class="yes">Included</td></tr>
+              <tr><td>World map of venues visited</td><td class="dash">-</td><td class="yes">Included</td></tr>
+              <tr><td>Monthly recap</td><td class="dash">-</td><td class="yes">Included</td></tr>
+              <tr><td>Profile customization</td><td class="dash">-</td><td class="yes">Included</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="price-note">Planned, subject to change. A venue subscription may be introduced later.</p>
+      </div>
+    </section>
+
+    <section class="section" id="privacy" aria-labelledby="privacy-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">05 / Privacy and trust</span>
+          <h2 class="pixel" id="privacy-title">Your identity stays yours.</h2>
+        </div>
+        <div class="trust">
+          <article class="panel"><span class="number">01</span><h3>Private by design</h3><p>Raw tag IDs are never stored. You decide which gamer tags are public.</p></article>
+          <article class="panel"><span class="number">02</span><h3>Signed reader messages</h3><p>Reader messages are digitally signed to help protect play records.</p></article>
+          <article class="panel"><span class="number">03</span><h3>Keep your history</h3><p>A lost keychain can be revoked and replaced without losing your history.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section roadmap" id="roadmap" aria-labelledby="roadmap-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">06 / Roadmap</span>
+          <h2 class="pixel" id="roadmap-title">From prototype to play.</h2>
+          <p>Sequence only. No release dates have been set.</p>
+        </div>
+        <div class="road">
+          <div class="milestone done"><strong>Foundation</strong><small>Backend and database built</small></div>
+          <div class="milestone"><strong>Player app</strong><small>In development</small></div>
+          <div class="milestone"><strong>Venue platform</strong><small>Planned</small></div>
+          <div class="milestone"><strong>Hardware prototype and pilot venues</strong><small>Planned</small></div>
+          <div class="milestone"><strong>Crowdfunding launch</strong><small>Planned, not active</small></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap">
+        <div class="section-head">
+          <span class="eyebrow">07 / FAQ</span>
+          <h2 class="pixel" id="faq-title">The practical stuff.</h2>
+        </div>
+        <div class="faq-list">
+          <details>
+            <summary>Do two keychains tap each other?</summary>
+            <p>No. Both keychains are passive. To share a profile, one player taps their keychain to another person's phone. Anyone can view the public profile; adding a player requires an account.</p>
+          </details>
+          <details>
+            <summary>Will a phone open a profile automatically?</summary>
+            <p>On newer iPhones, a keychain tap shows a notification that the person opens to view the profile. Older phones may need the app open. Phone behavior varies by model and settings.</p>
+          </details>
+          <details>
+            <summary>Does every play include a score or play duration?</summary>
+            <p>No. Each cabinet tap logs a play with its game, venue, machine, and time. Score tracking is planned only for machines that can support it. A tap does not measure play duration.</p>
+          </details>
+          <details>
+            <summary>Is Arcade Passport available now?</summary>
+            <p>Not yet. Arcade Passport is in development. There are no live venue claims or launch dates here. Join the waitlist when it opens for updates.</p>
+          </details>
+          <details>
+            <summary>What if I lose my keychain?</summary>
+            <p>You can revoke a lost keychain and replace it without losing your history.</p>
+          </details>
+          <details>
+            <summary>Will venues pay to participate?</summary>
+            <p>The plan is to make it free for venues at launch. A venue subscription may be added later; details are subject to change.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section waitlist" id="waitlist" aria-labelledby="waitlist-title">
+      <div class="wrap">
+        <span class="eyebrow">Stay in the loop</span>
+        <h2 class="pixel" id="waitlist-title">Your next arcade night starts here.</h2>
+        <p class="muted">Get product updates when signups open. One tap, every platform.</p>
+        <form id="waitlist-form">
+          <div class="form-row">
+            <label class="sr-only" for="email">Email address</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            <button class="button" type="submit">Join the waitlist</button>
+          </div>
+          <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+        </form>
+        <p class="form-note">We will only use this to email you when signups open.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-inner">
+      <span>&copy; <span id="year">2026</span> Arcade Passport. In development.</span>
+      <span>One keychain. Every arcade. Every platform.</span>
+      <span><a href="#privacy">Privacy principles</a></span>
+    </div>
+  </footer>
+
+  <script>
+    // Signups go to the Supabase table waitlist_signups. The anon key below is
+    // public by design: row-level security allows INSERT only, and there is no
+    // read policy, so this key cannot be used to pull the list back out.
+    const SUPABASE_URL = "https://lkqiqysegrmlvmxugmzu.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrcWlxeXNlZ3JtbHZteHVnbXp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5MTQyMTIsImV4cCI6MjA5MDQ5MDIxMn0.XIhWO5FdkZjTDAl20hH_BgnUvmzxU0-kHAN_zYXDrpc";
+    const WAITLIST_ENDPOINT = SUPABASE_URL + "/rest/v1/waitlist_signups";
+
+    const scenes = {
+      machine: {
+        tag: "Machine tap",
+        title: "Play it. Remember it.",
+        copy: "Tap your keychain on the reader at a participating cabinet. Each tap logs the game, venue, machine, and time to your history. Score tracking is planned only for machines that can support it.",
+        note: "A tap logs a play; it does not measure play duration.",
+        icon: "#"
+      },
+      phone: {
+        tag: "Phone tap",
+        title: "Make the connection.",
+        copy: "Tap your keychain to another person's phone to open your public profile. On newer iPhones, a notification appears to open it; older phones may need the app open.",
+        note: "Anyone can view a public profile. Adding a player requires an account.",
+        icon: "->"
+      },
+      kiosk: {
+        tag: "Kiosk setup",
+        title: "Start at the venue.",
+        copy: "Use a planned tablet kiosk at a participating venue to create your profile and connect a keychain before you play.",
+        note: "Kiosk and venue rollout are planned; Arcade Passport is in development.",
+        icon: "[]"
+      }
+    };
+
+    const tabs = [...document.querySelectorAll('[role="tab"]')];
+
+    function selectScene(tab, focus) {
+      tabs.forEach(item => {
+        const active = item === tab;
+        item.setAttribute("aria-selected", String(active));
+        item.tabIndex = active ? 0 : -1;
+      });
+
+      const scene = scenes[tab.dataset.scene];
+      document.getElementById("scenario").setAttribute("aria-labelledby", tab.id);
+      document.getElementById("scene-tag").textContent = scene.tag;
+      document.getElementById("scene-title").textContent = scene.title;
+      document.getElementById("scene-copy").textContent = scene.copy;
+      document.getElementById("scene-note").textContent = scene.note;
+      document.getElementById("scene-icon").textContent = scene.icon;
+
+      if (focus) tab.focus();
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => selectScene(tab, false));
+      tab.addEventListener("keydown", event => {
+        let next = index;
+        if (event.key === "ArrowRight") next = (index + 1) % tabs.length;
+        else if (event.key === "ArrowLeft") next = (index - 1 + tabs.length) % tabs.length;
+        else if (event.key === "Home") next = 0;
+        else if (event.key === "End") next = tabs.length - 1;
+        else return;
+
+        event.preventDefault();
+        selectScene(tabs[next], true);
+      });
+    });
+
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const form = document.getElementById("waitlist-form");
+    const status = document.getElementById("form-status");
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!form.reportValidity()) return;
+
+      const button = form.querySelector("button");
+      button.disabled = true;
+      status.textContent = "Submitting...";
+      status.className = "form-status";
+
+      try {
+        const response = await fetch(WAITLIST_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+            "Prefer": "return=minimal"
+          },
+          body: JSON.stringify({
+            email: document.getElementById("email").value.trim(),
+            source: "landing_page"
+          })
+        });
+
+        // 409 means this email is already on the list (unique constraint).
+        if (response.status === 409) {
+          status.textContent = "You are already on the list. We will be in touch.";
+          status.className = "form-status success";
+          form.reset();
+          return;
+        }
+        if (!response.ok) throw new Error("Request failed with status " + response.status);
+
+        status.textContent = "You are on the waitlist. Watch your inbox for updates.";
+        status.className = "form-status success";
+        form.reset();
+      } catch (error) {
+        status.textContent = "We could not submit your email. Please try again later.";
+        status.className = "form-status error";
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
